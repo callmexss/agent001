@@ -1,15 +1,14 @@
-import logging
 import json
+import logging
 import multiprocessing
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
-from rich import print as rich_print
+from langchain.chains import LLMChain
 from langchain.chat_models import ChatOpenAI
 from langchain.document_loaders import UnstructuredURLLoader
-from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
-
+from rich import print as rich_print
 
 TEMPLATE = """
     repo_name:

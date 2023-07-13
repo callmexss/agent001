@@ -2,20 +2,16 @@ import logging
 import pickle
 from pathlib import Path
 
-from langchain.document_loaders import (
-    ReadTheDocsLoader,
-    PyMuPDFLoader,
-)
+from langchain.document_loaders import PyMuPDFLoader, ReadTheDocsLoader
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.text_splitter import (
-    RecursiveCharacterTextSplitter,
     CharacterTextSplitter,
+    RecursiveCharacterTextSplitter,
 )
 from langchain.vectorstores import FAISS, Chroma
 
 from agent.settings import PROJECT_ROOT
 from agent.tools.utils import generate_safe_filename
-
 
 VECTOR_DB = PROJECT_ROOT / ".vector_db"
 VECTOR_DB.mkdir(exist_ok=True, parents=True)

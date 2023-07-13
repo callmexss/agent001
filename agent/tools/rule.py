@@ -1,6 +1,5 @@
 import re
 
-
 GITHUB_PATTERN = r"https://github\.com/[\w\-]+/[\w\-]+"
 ARXIV_PATTERN = r"https://(www\.)?arxiv\.org/abs/\d+\.\d+(v\d+)?"
 

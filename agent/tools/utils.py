@@ -28,7 +28,7 @@ def generate_safe_filename(filename: str):
 
 
 def windows_path_to_wsl(windows_path: str) -> str:
-    path = windows_path.strip('"').split(':')[-1].replace('\\', '/')
+    path = windows_path.strip('"').split(":")[-1].replace("\\", "/")
     logging.info(path)
     wsl_path = f"/mnt/c{path}"
     logging.info(f"Converting {windows_path} to {wsl_path}")

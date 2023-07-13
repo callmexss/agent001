@@ -4,11 +4,10 @@ from pathlib import Path
 
 import arxiv
 
-from agent.tools.utils import generate_safe_filename
+from agent.settings import PROJECT_ROOT
 from agent.tools.ingest_doc import ingest_pdf
 from agent.tools.rule import get_arxiv_id_from_url
-from agent.settings import PROJECT_ROOT
-
+from agent.tools.utils import generate_safe_filename
 
 logger = logging.getLogger(__name__)
 

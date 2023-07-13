@@ -2,27 +2,27 @@ import logging
 from pathlib import Path
 
 import openai
-import rich
 import pandas as pd
-from rich import markdown as md
-from rich.logging import RichHandler
-from langchain.document_loaders import TextLoader, PyMuPDFLoader
+import rich
+from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+from langchain.chains import RetrievalQA, RetrievalQAWithSourcesChain
+from langchain.chat_models import ChatOpenAI
+from langchain.document_loaders import PyMuPDFLoader, TextLoader
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.memory import ConversationBufferMemory
+from langchain.prompts import (
+    ChatPromptTemplate,
+    HumanMessagePromptTemplate,
+    PromptTemplate,
+    SystemMessagePromptTemplate,
+)
 from langchain.text_splitter import (
     CharacterTextSplitter,
     RecursiveCharacterTextSplitter,
 )
 from langchain.vectorstores import Chroma
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.chains import RetrievalQA, RetrievalQAWithSourcesChain
-from langchain.chat_models import ChatOpenAI
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain.memory import ConversationBufferMemory
-from langchain.prompts import (
-    PromptTemplate,
-    SystemMessagePromptTemplate,
-    HumanMessagePromptTemplate,
-    ChatPromptTemplate,
-)
+from rich import markdown as md
+from rich.logging import RichHandler
 
 logging.basicConfig(level=logging.INFO, handlers=[RichHandler()])
 
@@ -115,7 +115,7 @@ QUESTIONS = [
     "这篇论文的限制或不足在哪里？作者是否明确地表述了这些限制？",
     "作者的引用和参考文献是否充足、恰当？这些引用是否支持其论点？",
     "这篇论文的结构和逻辑是否清晰？是否有足够的过渡句和段落来引导读者？",
-    "总体而言，这篇论文的质量如何？是否值得进一步研究或参考？"
+    "总体而言，这篇论文的质量如何？是否值得进一步研究或参考？",
 ]
 
 for question in QUESTIONS:

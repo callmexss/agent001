@@ -2,17 +2,13 @@ import logging
 import time
 
 import clipboard
-
 from rich.logging import RichHandler
-from agent.tools.rule import (
-    is_github_url,
-    is_arxiv_url,
-)
-from agent.tools.summary_of_github import GithubRepoDataCollector
+
 from agent.tools.embedding_arxiv_paper import embedding_arxiv_paper_from_url
 from agent.tools.embedding_local_pdf import embedding_pdf
+from agent.tools.rule import is_arxiv_url, is_github_url
+from agent.tools.summary_of_github import GithubRepoDataCollector
 from agent.tools.utils import windows_path_to_wsl
-
 
 logging.basicConfig(
     level=logging.INFO,
