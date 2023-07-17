@@ -1,5 +1,6 @@
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import clipboard
 from rich.logging import RichHandler
@@ -22,10 +23,17 @@ class ClipboardObserver:
 
 
 class ClipboardListener:
-    def __init__(self, logger):
-        self._observers = []
+    def __init__(self, logger, max_workers=10):
+        self._observers: list[ClipboardObserver] = []
         self._last_clipboard_content = None
         self.logger = logger
+        self.executor = ThreadPoolExecutor(max_workers=max_workers)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.executor.shutdown()
 
     def add_observer(self, observer):
         if not isinstance(observer, ClipboardObserver):
@@ -37,7 +45,7 @@ class ClipboardListener:
 
     def _notify_observers(self, content):
         for observer in self._observers:
-            observer.update(content)
+            self.executor.submit(observer.update, content)
 
     def listen(self):
         while True:
@@ -103,13 +111,13 @@ if __name__ == "__main__":
     rich_handler = RichHandler(rich_tracebacks=True)
     logger.addHandler(rich_handler)
 
-    listener = ClipboardListener(logger)
-    listener.add_observer(PrintClipboardObserver(logger))
-    listener.add_observer(GitHubLinkObserver(logger))
-    listener.add_observer(ArxivLinkObserver(logger))
-    listener.add_observer(LocalPDFObserver(logger))
+    with ClipboardListener(logger) as listener:
+        listener.add_observer(PrintClipboardObserver(logger))
+        listener.add_observer(GitHubLinkObserver(logger))
+        listener.add_observer(ArxivLinkObserver(logger))
+        listener.add_observer(LocalPDFObserver(logger))
 
-    try:
-        listener.listen()
-    except KeyboardInterrupt:
-        logger.info("Stopped listening")
+        try:
+            listener.listen()
+        except KeyboardInterrupt:
+            logger.info("Stopped listening")
