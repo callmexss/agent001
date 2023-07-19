@@ -7,9 +7,14 @@ from rich.logging import RichHandler
 
 from agent.tools.embedding_arxiv_paper import embedding_arxiv_paper_from_url
 from agent.tools.embedding_local_pdf import embedding_pdf
-from agent.tools.rule import is_arxiv_url, is_github_url
+from agent.tools.rule import (
+    is_arxiv_url,
+    is_github_url,
+    is_wechat_post_url,
+)
 from agent.tools.summary_of_github import GithubRepoDataCollector
 from agent.tools.utils import windows_path_to_wsl
+from agent.tools.wechat_post import chain_process
 
 logging.basicConfig(
     level=logging.INFO,
@@ -45,7 +50,10 @@ class ClipboardListener:
 
     def _notify_observers(self, content):
         for observer in self._observers:
-            self.executor.submit(observer.update, content)
+            try:
+                self.executor.submit(observer.update, content)
+            except Exception as err:
+                self.logger.error(err)
 
     def listen(self):
         while True:
@@ -88,7 +96,7 @@ class ArxivLinkObserver(ClipboardObserver):
     def update(self, content):
         if is_arxiv_url(content):
             self.logger.info(f"Detected Arxiv link: {content}")
-            for chunk_size in [2000]:
+            for chunk_size in [6000]:
                 embedding_arxiv_paper_from_url(
                     url=content, chunk_size=chunk_size, chunk_overlap=0
                 )
@@ -101,8 +109,18 @@ class LocalPDFObserver(ClipboardObserver):
     def update(self, content):
         content = windows_path_to_wsl(content)
         logger.info(content)
-        for chunk_size in [2000]:
+        for chunk_size in [6000]:
             embedding_pdf(content, chunk_size=chunk_size, chunk_overlap=0)
+
+
+class RewriteWechatPostObserver(ClipboardObserver):
+    def __init__(self, logger: logging.Logger):
+        self.logger = logger
+    
+    def update(self, content):
+        if is_wechat_post_url(content):
+            logger.info("Detected Wechat post link: {content}")
+            chain_process(content)
 
 
 if __name__ == "__main__":
@@ -116,6 +134,7 @@ if __name__ == "__main__":
         listener.add_observer(GitHubLinkObserver(logger))
         listener.add_observer(ArxivLinkObserver(logger))
         listener.add_observer(LocalPDFObserver(logger))
+        listener.add_observer(RewriteWechatPostObserver(logger))
 
         try:
             listener.listen()

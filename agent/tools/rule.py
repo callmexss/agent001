@@ -2,6 +2,7 @@ import re
 
 GITHUB_PATTERN = r"https://github\.com/[\w\-]+/[\w\-]+"
 ARXIV_PATTERN = r"https://(www\.)?arxiv\.org/abs/\d+\.\d+(v\d+)?"
+WECHAT_POST_PATTERN = r"https://(www\.)?mp.weixin.qq.com/s/[\w\-]+"
 
 
 def is_github_url(url):
@@ -34,6 +35,10 @@ def is_arxiv_url(url) -> bool:
         bool: True if the URL is a valid arXiv URL, False otherwise.
     """
     return bool(re.match(ARXIV_PATTERN, url))
+
+
+def is_wechat_post_url(url):
+    return bool(re.match(WECHAT_POST_PATTERN, url))
 
 
 def get_arxiv_id_from_url(url: str) -> str:

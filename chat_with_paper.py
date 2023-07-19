@@ -1,6 +1,9 @@
 import logging
+from pathlib import Path
 
+import openai
 import pandas as pd
+import rich
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
 from langchain.chains import RetrievalQA
 from langchain.chat_models import ChatOpenAI
@@ -16,6 +19,7 @@ from langchain.vectorstores import Chroma
 from rich.logging import RichHandler
 
 from agent import settings
+from agent.tools.ingest_doc import ingest_pdf
 
 logging.basicConfig(level=logging.INFO, handlers=[RichHandler()])
 
@@ -76,6 +80,8 @@ def chat(chain):
             _ = ask(query, chain)
         except KeyboardInterrupt:
             break
+        except openai.error.OpenAIError as e:
+            logging.exception(f"OpenAI API error: {e}")
 
 
 def auto_ask(chain):
@@ -85,8 +91,18 @@ def auto_ask(chain):
 
 if __name__ == "__main__":
     df = pd.read_parquet(".vector_db/chroma-collections.parquet")
-    name = df["name"].to_list()[7]
-    name
+    name_li = df["name"].to_list()
+    rich.print([f"{i}. {name}" for i, name in enumerate(name_li)])
+    idx = input("Which paper do you want to explore? ")
+    name = name_li[max(0, min(int(idx), len(name_li)))]
+
+    # for name in name_li:
+    #     db = Chroma(
+    #         collection_name=name,
+    #         embedding_function=OpenAIEmbeddings(),
+    #         persist_directory=settings.DB_PATH.as_posix(),
+    #     )
+    #     db.persist()
 
     db = Chroma(
         collection_name=name,
@@ -96,16 +112,22 @@ if __name__ == "__main__":
 
     llm = ChatOpenAI(
         temperature=0.2,
-        # model="gpt-3.5-turbo-16k-0613",
-        model="gpt-3.5-turbo-0613",
+        model="gpt-3.5-turbo-16k-0613",
+        # model="gpt-3.5-turbo-0613",
         # model="gpt-4-0613",
         streaming=True,
         max_tokens=2000,
         callbacks=[StreamingStdOutCallbackHandler()],
     )
+    retriever = db.as_retriever()
+    retriever.search_kwargs["distance_metric"] = "cos"
+    retriever.search_kwargs["fetch_k"] = 100
+    retriever.search_kwargs["maximal_marginal_relevance"] = True
+    retriever.search_kwargs["k"] = 10
+
     chain = RetrievalQA.from_llm(
         llm,
-        retriever=db.as_retriever(),
+        retriever=retriever,
         callbacks=[StreamingStdOutCallbackHandler()],
         return_source_documents=True,
         prompt=CHAT_PROMPT,
@@ -116,3 +138,9 @@ if __name__ == "__main__":
 
     # auto_ask(chain)
     chat(chain)
+
+    # papers = Path("./data/papers").glob("*.pdf")
+    # for paper in papers:
+    #     if paper.name[:4] not in name_li:
+    #         print(paper.absolute().as_posix())
+    #         ingest_pdf(paper, chunk_size=2000, chunk_overlap=100)

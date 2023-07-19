@@ -13,7 +13,17 @@ from rich import print as rich_print
 TEMPLATE = """
     repo_name:
     repo_description:
-    chinese_summary:
+    chinese_summary[以下各项请使用列表进行回复]:
+        - 摘要:
+        - 事实:
+        - 底层逻辑:
+        - 相关术语和概念:
+        - 必备技能:
+        - 用波特五力模型分析这个项目:
+        - 认知:
+        - 逻辑谬误:
+        - 批判性思考:
+        - 促进思考的问题:
     rate(0-100):
     hash_tags: (
         can be some of [
@@ -26,6 +36,7 @@ TEMPLATE = """
 PROMPT_TEMPLATE = """
 Here is some info from a github link: "{text}".
 Please summarize it using fields in below template: "{template}".
+Your response should be as much detail as possible.
 And response with a json string which can be parsed by using
 json.loads() in python:
 """
@@ -38,7 +49,7 @@ OUTPUT_DIRECTORY.mkdir(exist_ok=True, parents=True)
 
 class GithubRepoDataCollector:
     def __init__(
-        self, url: str, model="gpt-3.5-turbo-0613", temperature=0, logger=None
+        self, url: str, model="gpt-3.5-turbo-16k-0613", temperature=0, logger=None
     ):
         self.url = url
         self.llm = ChatOpenAI(temperature=temperature, model=model)
@@ -56,7 +67,7 @@ class GithubRepoDataCollector:
 
     def get_repo_info(self) -> Dict[str, Any]:
         docs = self.get_docs()
-        res = self.chain({"text": docs, "template": TEMPLATE})
+        res = self.chain({"text": docs[:12000], "template": TEMPLATE})
         repo_info = json.loads(res["text"])
         repo_info["repo_url"] = self.url
         repo_info["context"] = docs[0].page_content
