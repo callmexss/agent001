@@ -77,7 +77,8 @@ def chat(chain):
             query = input("Q: ")
             if query == "exit":
                 break
-            _ = ask(query, chain)
+            result = ask(query, chain)
+            rich.print(result['result'])
         except KeyboardInterrupt:
             break
         except openai.error.OpenAIError as e:

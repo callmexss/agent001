@@ -54,3 +54,4 @@ def ingest_pdf(file: Path, chunk_size, chunk_overlap):
         if doc.page_content not in docs_set:
             db.add_documents([doc])
     db.persist()
+    db = None
