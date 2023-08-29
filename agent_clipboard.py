@@ -96,7 +96,7 @@ class ArxivLinkObserver(ClipboardObserver):
     def update(self, content):
         if is_arxiv_url(content):
             self.logger.info(f"Detected Arxiv link: {content}")
-            for chunk_size in [6000]:
+            for chunk_size in [4000]:
                 embedding_arxiv_paper_from_url(
                     url=content, chunk_size=chunk_size, chunk_overlap=0
                 )
@@ -109,7 +109,7 @@ class LocalPDFObserver(ClipboardObserver):
     def update(self, content):
         content = windows_path_to_wsl(content)
         logger.info(content)
-        for chunk_size in [6000]:
+        for chunk_size in [4000]:
             embedding_pdf(content, chunk_size=chunk_size, chunk_overlap=0)
 
 

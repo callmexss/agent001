@@ -1,3 +1,4 @@
+from codecs import ignore_errors
 import logging
 from pathlib import Path
 
@@ -58,7 +59,12 @@ CHAT_PROMPT = ChatPromptTemplate.from_messages(messages)
 def ask(query: str, chain):
     result = chain({"query": query})
     print()
-    with open(settings.CHAT_HISTORY_PATH / f"chat_history_{name}.txt", "a+") as f:
+    with open(
+        settings.CHAT_HISTORY_PATH / f"chat_history_{name}.txt",
+        "a+",
+        encoding="utf-8",
+        errors="ignore"
+    ) as f:
         f.write("==========================================================\n")
         f.write(f"Q: {query}\nA: {result['result']}\n\n")
         f.write(
@@ -78,11 +84,16 @@ def chat(chain):
             if query == "exit":
                 break
             result = ask(query, chain)
+            print('\n', '*' * 80, '\n')
             rich.print(result['result'])
         except KeyboardInterrupt:
             break
         except openai.error.OpenAIError as e:
-            logging.exception(f"OpenAI API error: {e}")
+            logging.info(f"OpenAI API error: {e}")
+        except openai.error.InvalidRequestError as e:
+            logging.info(f"Invalid request error: {e}")
+        except UnicodeEncodeError as e:
+            logging.info(f"Unicode decode error: {e}")
 
 
 def auto_ask(chain):
@@ -113,9 +124,17 @@ if __name__ == "__main__":
 
     llm = ChatOpenAI(
         temperature=0.2,
-        model="gpt-3.5-turbo-16k-0613",
+        # model="gpt-3.5-turbo-16k-0613",
         # model="gpt-3.5-turbo-0613",
-        # model="gpt-4-0613",
+        model="gpt-4-0613",
+        streaming=True,
+        max_tokens=1000,
+        callbacks=[StreamingStdOutCallbackHandler()],
+    )
+
+    llm_16k = ChatOpenAI(
+        temperature=0.2,
+        model="gpt-3.5-turbo-16k-0613",
         streaming=True,
         max_tokens=2000,
         callbacks=[StreamingStdOutCallbackHandler()],
@@ -127,7 +146,7 @@ if __name__ == "__main__":
     retriever.search_kwargs["k"] = 10
 
     chain = RetrievalQA.from_llm(
-        llm,
+        llm_16k,
         retriever=retriever,
         callbacks=[StreamingStdOutCallbackHandler()],
         return_source_documents=True,
