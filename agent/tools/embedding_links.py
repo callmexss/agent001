@@ -248,7 +248,6 @@ if __name__ == "__main__":
     print(chain.run("What is the name of the type of cloud that rains?"))
 
     from langchain.chains.router.embedding_router import EmbeddingRouterChain
-    from langchain.embeddings import CohereEmbeddings
     from langchain.vectorstores import Chroma
 
     names_and_descriptions = [
